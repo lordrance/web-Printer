@@ -2,14 +2,17 @@ import React from 'react';
 
 const TemplateList = ({ templates, loadTemplate, deleteTemplate }) => {
   return (
-    <div>
-      <h3>Saved Templates</h3>
+    <div className="saved-templates">
+      <h2>Saved Templates</h2>
       <ul>
         {templates.map((template, index) => (
-          <li key={index}>
-            <button onClick={() => loadTemplate(template)}>{template.name}</button>
-            <button onClick={() => deleteTemplate(template.name)}>Delete</button>
-          </li>
+          template && template.name ? (
+            <li key={index}>
+              {template.name} 
+              <button onClick={() => loadTemplate(template)}>Load</button>
+              <button onClick={() => deleteTemplate(template.name)}>Delete</button>
+            </li>
+          ) : null
         ))}
       </ul>
     </div>

@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import mammoth from 'mammoth';
 import TemplateEditor from './components/TemplateEditor';
 import Toolbar from './components/Toolbar';
 import PaperSizeSelector from './components/PaperSizeSelector';
 import TemplateList from './components/TemplateList';
-import UploadButton from './components/UploadButton';
 import printerImage from './assets/printer.png';
 import './App.css';
 
@@ -14,6 +14,9 @@ function App() {
   const [currentTemplate, setCurrentTemplate] = useState({ name: '', elements: [] });
   const [paperSize, setPaperSize] = useState({ width: 210, height: 297 }); // Default A4 size in mm
   const [customSize, setCustomSize] = useState(false);
+  const [wordContent, setWordContent] = useState('');
+
+  const printRef = useRef();
 
   useEffect(() => {
     const savedTemplates = JSON.parse(localStorage.getItem('templates')) || [];
@@ -27,12 +30,14 @@ function App() {
   };
 
   const loadTemplate = (template) => {
-    setCurrentTemplate(template);
-    setPaperSize(template.paperSize); // 加载纸张尺寸
+    if (template) {
+      setCurrentTemplate(template);
+      setPaperSize(template.paperSize || { width: 210, height: 297 }); // 设置默认纸张尺寸
+    }
   };
 
   const deleteTemplate = (templateName) => {
-    const updatedTemplates = templates.filter(template => template.name !== templateName);
+    const updatedTemplates = templates.filter(template => template && template.name !== templateName);
     setTemplates(updatedTemplates);
     localStorage.setItem('templates', JSON.stringify(updatedTemplates));
   };
@@ -49,6 +54,32 @@ function App() {
         setPaperSize({ width: 297, height: 420 });
       }
     }
+  };
+
+  const handleWordUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        mammoth.extractRawText({ arrayBuffer: e.target.result })
+          .then((result) => {
+            setWordContent(result.value);
+          })
+          .catch((err) => {
+            console.error("Error reading Word file:", err);
+          });
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  };
+
+  const handlePrint = () => {
+    const printContents = printRef.current.innerHTML;
+    const originalContents = document.body.innerHTML;
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+    window.location.reload();
   };
 
   return (
@@ -87,12 +118,18 @@ function App() {
         </div>
         <Toolbar addElement={(element) => setCurrentTemplate(prev => ({ ...prev, elements: [...prev.elements, element] }))} />
         <TemplateList templates={templates} loadTemplate={loadTemplate} deleteTemplate={deleteTemplate} />
-        <UploadButton />
-        <TemplateEditor
-          template={currentTemplate}
-          paperSize={paperSize}
-          saveTemplate={(template) => saveTemplate({ ...template, elements: currentTemplate.elements })}
-        />
+        <div className="upload-section">
+          <input type="file" accept=".docx" onChange={handleWordUpload} />
+          <button onClick={handlePrint}>打印</button>
+        </div>
+        <div ref={printRef} className="template-editor-container">
+          <TemplateEditor
+            template={currentTemplate}
+            paperSize={paperSize}
+            saveTemplate={(template) => saveTemplate({ ...template, elements: currentTemplate.elements })}
+          />
+          <div className="word-content" dangerouslySetInnerHTML={{ __html: wordContent }} />
+        </div>
       </div>
     </DndProvider>
   );
