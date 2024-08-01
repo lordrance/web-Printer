@@ -3,7 +3,6 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import mammoth from 'mammoth';
 import TemplateEditor from './components/TemplateEditor';
-import Toolbar from './components/Toolbar';
 import PaperSizeSelector from './components/PaperSizeSelector';
 import TemplateList from './components/TemplateList';
 import printerImage from './assets/printer.png';
@@ -74,12 +73,7 @@ function App() {
   };
 
   const handlePrint = () => {
-    const printContents = printRef.current.innerHTML;
-    const originalContents = document.body.innerHTML;
-    document.body.innerHTML = printContents;
     window.print();
-    document.body.innerHTML = originalContents;
-    window.location.reload();
   };
 
   return (
@@ -116,7 +110,7 @@ function App() {
             </div>
           )}
         </div>
-        <Toolbar addElement={(element) => setCurrentTemplate(prev => ({ ...prev, elements: [...prev.elements, element] }))} />
+        
         <TemplateList templates={templates} loadTemplate={loadTemplate} deleteTemplate={deleteTemplate} />
         <div className="upload-section">
           <input type="file" accept=".docx" onChange={handleWordUpload} />

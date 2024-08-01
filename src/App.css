@@ -37,6 +37,25 @@
   }
 }
 
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .word-content,
+  .word-content * {
+    visibility: visible;
+  }
+
+  .word-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
+
+
 /* 新增样式 */
 .header {
   display: flex;
